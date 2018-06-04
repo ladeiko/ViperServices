@@ -31,23 +31,26 @@ class DefaultServiceImpl: ViperService {
     
     private let succeed: Bool
     private let bootBlock: () -> Void
+    private let shutdownBlock: () -> Void
     private let asyncBoot: Bool
     
     init(succeed: Bool = true,
          bootBlock: @escaping (() -> Void) = {},
+         shutdownBlock: @escaping (() -> Void) = {},
          asyncBoot: Bool = false) {
         self.succeed = succeed
         self.bootBlock = bootBlock
+        self.shutdownBlock = shutdownBlock
         self.asyncBoot = asyncBoot
     }
     
-    func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return nil
     }
     
     func boot(launchOptions: [UIApplicationLaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
         if asyncBoot {
-            DispatchQueue.main.async {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
                 self.bootBlock()
                 if self.succeed {
                     completion(.succeeded)
@@ -55,7 +58,7 @@ class DefaultServiceImpl: ViperService {
                 else {
                     completion(.failed(error: TestError.SomeError))
                 }
-            }
+            })
         }
         else {
             bootBlock()
@@ -66,6 +69,11 @@ class DefaultServiceImpl: ViperService {
                 completion(.failed(error: TestError.SomeError))
             }
         }
+    }
+    
+    func shutdown(completion: @escaping ViperServiceShutdownCompletion) {
+        shutdownBlock()
+        completion()
     }
     
 }
@@ -83,21 +91,21 @@ protocol DepServiceDC: ViperService {}
 
 class DepServiceImplA: DefaultServiceImpl, DepServiceA {}
 class DepServiceImplBA: DefaultServiceImpl, DepServiceBA {
-    override func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    override func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return [
             container.resolve() as DepServiceA
         ]
     }
 }
 class DepServiceImplCA: DefaultServiceImpl, DepServiceCA {
-    override func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    override func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return [
             container.resolve() as DepServiceA
         ]
     }
 }
 class DepServiceImplDC: DefaultServiceImpl, DepServiceDC {
-    override func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    override func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return [
             container.resolve() as DepServiceCA
         ]
@@ -245,6 +253,101 @@ class ViperServicesDemoTests: XCTestCase {
         XCTAssert(context.succeeded == true)
         XCTAssertNil(context.failed)
         XCTAssert((booted == ["A", "B", "C", "D"]) || (booted == ["A", "C", "B", "D"]))
+    }
+    
+    func testShutdown() {
+        let services = ViperServicesExample()
+        
+        let expectation = XCTestExpectation(description: "Boot")
+        
+        var booted = [String]()
+        var stopped = [String]()
+        
+        try! services.register(DepServiceImplDC(bootBlock: { booted.append("D") }, shutdownBlock: { stopped.append("D") }, asyncBoot: true) as DepServiceDC)
+        try! services.register(DepServiceImplCA(bootBlock: { booted.append("C") }, shutdownBlock: { stopped.append("C") }, asyncBoot: true) as DepServiceCA)
+        try! services.register(DepServiceImplBA(bootBlock: { booted.append("B") }, shutdownBlock: { stopped.append("B") }, asyncBoot: true) as DepServiceBA)
+        try! services.register(DepServiceImplA(bootBlock: { booted.append("A") }, shutdownBlock: { stopped.append("A") }, asyncBoot: true) as DepServiceA)
+        
+        let context = BootContext()
+        
+        services.boot(launchOptions: nil) { (result) in
+            switch result {
+            case .succeeded:
+                context.succeeded = true
+                
+            case let .failed(failedServices):
+                context.failed = failedServices
+                break
+            }
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 10.0)
+        
+        XCTAssert(context.succeeded == true)
+        XCTAssertNil(context.failed)
+        XCTAssert((booted == ["A", "B", "C", "D"]) || (booted == ["A", "C", "B", "D"]))
+        
+        let shutdownExpectation = XCTestExpectation(description: "Shutdown")
+        
+        services.shutdown {
+            shutdownExpectation.fulfill()
+        }
+        
+        wait(for: [shutdownExpectation], timeout: 10.0)
+        
+        XCTAssert((stopped == ["D", "C", "B", "A"]) || (stopped == ["D", "B", "C", "A"]))
+    }
+    
+    func testShutdownCalledWhileBoot() {
+        let services = ViperServicesExample()
+        
+        let bootExpectation = XCTestExpectation(description: "Boot")
+        let shutdownExpectation = XCTestExpectation(description: "Shutdown")
+        
+        var booted = [String]()
+        var stopped = [String]()
+        
+        weak var weakServices = services
+        
+        try! services.register(DepServiceImplDC(bootBlock: { booted.append("D") }, shutdownBlock: { stopped.append("D") }, asyncBoot: true) as DepServiceDC)
+        try! services.register(DepServiceImplCA(bootBlock: { booted.append("C") }, shutdownBlock: { stopped.append("C") }, asyncBoot: true) as DepServiceCA)
+        
+        try! services.register(DepServiceImplBA(bootBlock: {
+            booted.append("B")
+            if let services = weakServices {
+                services.shutdown { // Call shutdown before boot completion
+                    shutdownExpectation.fulfill()
+                }
+            }
+        }, shutdownBlock: { stopped.append("B") }, asyncBoot: true) as DepServiceBA)
+        
+        try! services.register(DepServiceImplA(bootBlock: { booted.append("A") }, shutdownBlock: { stopped.append("A") }, asyncBoot: true) as DepServiceA)
+        
+        let context = BootContext()
+        
+        services.boot(launchOptions: nil) { (result) in
+            switch result {
+            case .succeeded:
+                context.succeeded = true
+                
+            case let .failed(failedServices):
+                context.failed = failedServices
+                break
+            }
+            bootExpectation.fulfill()
+        }
+        
+        wait(for: [bootExpectation], timeout: 10.0)
+        
+        XCTAssert(context.succeeded == false)
+        XCTAssertNotNil(context.failed)
+        XCTAssert(context.failed!.count == 1)
+        XCTAssert(booted == ["A", "B"])
+        
+        wait(for: [shutdownExpectation], timeout: 10.0)
+        
+        XCTAssert(stopped == ["B", "A"])
     }
     
 }

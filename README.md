@@ -12,8 +12,7 @@ Also it introduces 'bootable' concept of service. Also services can define units
 
 ## Changelog
 
-### v1.0.0
-* Initial version
+See [CHANGELOG](CHANGELOG.md)
 
 ## Installation
 
@@ -60,7 +59,7 @@ protocol Service1: ViperService {
 
 class Service1Impl: Service1 {
     
-    func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return [ // depends on
             container.resolve() as Service2
         ]
@@ -89,7 +88,7 @@ class Service2Impl: Service2 {
     
     private weak var container: ViperServicesContainer!
     
-    func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         self.container = container
         return nil
     }

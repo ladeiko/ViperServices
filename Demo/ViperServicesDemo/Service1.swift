@@ -9,13 +9,13 @@
 import Foundation
 import ViperServices
 
-protocol Service1: ViperService {
+protocol Service1: class {
     func foo()
 }
 
-class Service1Impl: Service1 {
+class Service1Impl: Service1, ViperService {
     
-    func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return [ // depends on
             container.resolve() as Service2
         ]
@@ -24,6 +24,11 @@ class Service1Impl: Service1 {
     func boot(launchOptions: [UIApplicationLaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
         print("boot 1 called")
         completion(.succeeded)
+    }
+    
+    func shutdown(completion: @escaping ViperServiceShutdownCompletion) {
+        print("Service1Impl shutdown completed")
+        completion()
     }
     
     func foo() {

@@ -9,7 +9,7 @@
 import Foundation
 import ViperServices
 
-protocol Service2: ViperService {
+protocol Service2: class {
     func foo()
 }
 
@@ -17,11 +17,11 @@ enum Service2Error: Error {
     case SomeError
 }
 
-class Service2Impl: Service2 {
+class Service2Impl: Service2, ViperService {
     
     private weak var container: ViperServicesContainer!
     
-    func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]? {
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         self.container = container
         return nil
     }
@@ -37,6 +37,11 @@ class Service2Impl: Service2 {
             }
             
         }
+    }
+    
+    func shutdown(completion: @escaping ViperServiceShutdownCompletion) {
+        print("Service2Impl shutdown completed")
+        completion()
     }
     
     func foo() {

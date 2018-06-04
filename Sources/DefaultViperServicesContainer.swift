@@ -24,16 +24,39 @@
 
 import Foundation
 
+func runOnMainThread(_ block: () -> Void) {
+    if Thread.isMainThread {
+        block()
+    }
+    else {
+        DispatchQueue.main.sync {
+            block()
+        }
+    }
+}
+
 /**
  *  Default implementation of ViperServicesContainer.
  */
 @available(iOS 10.0, *)
 open class DefaultViperServicesContainer: ViperServicesContainer {
     
+    private enum State {
+        case initial
+        case booting
+        case bootCompleted
+        case shuttingDown
+    }
+
+    private typealias InternalOperation = (_ completion: @escaping (() -> Void) ) -> Void
+    
+    private var operationIsRunning = false
+    private var operations = [InternalOperation]()
+    private var state: State = .initial
     private var services: [String: ViperService] = [:]
     private var registrationOrder = [String]()
+    private var bootedServices = [ViperService]()
     private var names: [String: String] = [:]
-    private var booted = false
     private var booting = [String]()
     private var _lock: os_unfair_lock_t
 
@@ -56,140 +79,225 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         assert(Thread.isMainThread)
         
         try! withLock { () -> Void in
-            if booted {
+            
+            if state != .initial {
                 throw ViperServicesContainerError.alreadyBooted
             }
+            
+            let key = "\(T.self)"
+            
+            if services[key] != nil {
+                throw ViperServicesContainerError.serviceAlreadyRegistered
+            }
+            
+            registrationOrder.append(key)
+            services[key] = (service as! ViperService)
+            
+            let opaque: UnsafeMutableRawPointer = Unmanaged.passUnretained(service as AnyObject).toOpaque()
+            let ptrStr = String(describing: opaque)
+            
+            if names[ptrStr] != nil {
+                throw ViperServicesContainerError.multiFunctionServiceNotAllowed
+            }
+            
+            names[ptrStr] = key
         }
-        
-        let key = "\(T.self)"
-        
-        if services[key] != nil {
-            throw ViperServicesContainerError.serviceAlreadyRegistered
-        }
-        
-        registrationOrder.append(key)
-        services[key] = (service as! ViperService)
-        
-        let opaque: UnsafeMutableRawPointer = Unmanaged.passUnretained(service as AnyObject).toOpaque()
-        let ptrStr = String(describing: opaque)
-        
-        if names[ptrStr] != nil {
-            throw ViperServicesContainerError.multiFunctionServiceNotAllowed
-        }
-        
-        names[ptrStr] = key
     }
     
     open func resolve<T>() -> T {
         let key = "\(T.self)"
-        try! withLock { () -> Void in
-            if booted && booting.contains(key) {
-                throw ViperServicesContainerError.youTriedToResolveServiceThatIsNotReadyYet
+        return try! withLock { () -> T in
+            switch state {
+            case .booting:
+                if booting.contains(key) {
+                    throw ViperServicesContainerError.youTriedToResolveServiceThatIsNotReadyYet
+                }
+            default: break
             }
+            return services[key] as! T
         }
-        return services[key] as! T
     }
     
     open func boot(launchOptions: [UIApplicationLaunchOptionsKey: Any]?, completion: @escaping ViperServicesContainerBootCompletion) {
         
         assert(Thread.isMainThread)
-        assert(!booted)
         
-        withLock {
-            booted = true
-        }
-        
-        var completed = [String: ViperServiceBootResult]()
-        var dependencies: Dictionary<String, [String]> = [:]
-        
-        for service in services.values {
-            let key = name(of: service)
-            if let deps = service.setupDependencies(self), !deps.isEmpty {
-                dependencies[key] = deps.map({ name(of: $0) })
-            }
-            else {
-                dependencies[key] = []
-            }
-        }
-        
-        withLock {
-            booting = ((try! type(of: self).topo_sort(dependency_list: dependencies)) as NSArray).sortedArray(comparator: { (a, b) -> ComparisonResult in
-                let a = a as! String
-                let b = b as! String
-                
-                if !dependencies[a]!.isEmpty || !dependencies[b]!.isEmpty {
-                    return .orderedSame
+        operations.append { (operationCompletion) in
+            
+            self.withLock {
+                switch self.state {
+                case .initial:
+                    self.state = .booting
+                    
+                default:
+                    fatalError()
                 }
                 
-                let i1 = registrationOrder.index(of: a)!
-                let i2 = registrationOrder.index(of: b)!
-                
-                return i1 < i2 ? .orderedAscending : .orderedDescending
-            }) as! [String]
-        }
-        
-        func run() {
-            
-            let bootCompleted = withLock {
-                return self.booting.isEmpty
             }
             
-            if bootCompleted {
-                completion(.succeeded)
-                return
-            }
+            var completed = [String: ViperServiceBootResult]()
+            var dependencies: Dictionary<String, [String]> = [:]
             
-            let next = withLock {
-                return self.booting.removeFirst()
-            }
-            
-            let key = "\(next.self)"
-            let service = services[key]!
-            
-            service.boot(launchOptions: launchOptions, completion: { (result) in
-                
-                func done() {
-                    switch result {
-                    case .succeeded: run()
-                    case let .failed(error):
-                        self.withLock { () -> Void in
-                            self.booting.removeAll()
-                        }
-                        completion(.failed(failedServices: [ViperServiceBootFailureResult(service: service, error: error)]))
-                    }
-                }
-                
-                if Thread.isMainThread {
-                    done()
+            for service in self.services.values {
+                let key = self.name(of: service)
+                if let deps = service.setupDependencies(self), !deps.isEmpty {
+                    dependencies[key] = deps.map({ self.name(of: $0) })
                 }
                 else {
-                    DispatchQueue.main.async {
-                        done()
-                    }
+                    dependencies[key] = []
                 }
+            }
+            
+            self.withLock {
+                self.booting = ((try! type(of: self).topo_sort(dependency_list: dependencies)) as NSArray).sortedArray(comparator: { (a, b) -> ComparisonResult in
+                    let a = a as! String
+                    let b = b as! String
+                    
+                    if !dependencies[a]!.isEmpty || !dependencies[b]!.isEmpty {
+                        return .orderedSame
+                    }
+                    
+                    let i1 = self.registrationOrder.index(of: a)!
+                    let i2 = self.registrationOrder.index(of: b)!
+                    
+                    return i1 < i2 ? .orderedAscending : .orderedDescending
+                }) as! [String]
+            }
+            
+            func complete(_ result: ViperServicesContainerBootResult) {
+                self.withLock {
+                    self.booting.removeAll()
+                    self.state = .bootCompleted
+                }
+                completion(result)
+                operationCompletion()
+            }
+            
+            func bootNext() {
+                
+                assert(Thread.isMainThread)
+                
+                let bootCompleted = self.withLock {
+                    return self.booting.isEmpty
+                }
+                
+                if bootCompleted {
+                    complete(.succeeded)
+                    return
+                }
+                
+                let next = self.withLock {
+                    return self.booting.removeFirst()
+                }
+                
+                let key = "\(next.self)"
+                let service = self.services[key]!
+                
+                if self.operations.isEmpty == false { // if some operation is pending, then break boot
+                    complete(.failed(failedServices: [ViperServiceBootFailureResult(service: service, error: ViperServicesContainerError.bootCanceled)]))
+                    return
+                }
+                
+                service.boot(launchOptions: launchOptions, completion: { (result) in
+                    runOnMainThread {
+                        switch result {
+                        case .succeeded:
+                            self.bootedServices.append(service)
+                            bootNext()
+                            
+                        case let .failed(error):
+                            complete(.failed(failedServices: [ViperServiceBootFailureResult(service: service, error: error)]))
+                        }
+                    }
+                })
+            }
+            
+            #if DEBUG
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (timer) in
+                
+                let stillBooting = self.withLock {
+                    return Array<String>(self.booting)
+                }
+                
+                if stillBooting.isEmpty {
+                    timer.invalidate()
+                    return
+                }
+                
+                print("[DefaultViperServicesContainer]: Still booting \(stillBooting)")
             })
+            #endif
+            
+            bootNext()
         }
-
-        #if DEBUG
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (timer) in
-            
-            let stillBooting = self.withLock {
-                return Array<String>(self.booting)
-            }
-            
-            if stillBooting.isEmpty {
-                timer.invalidate()
-                return
-            }
-            
-            print("[DefaultViperServicesContainer]: Still booting \(stillBooting)")
-        })
-        #endif
         
-        run()
+        runNextOperation()
+    }
+    
+    open func shutdown(completion: @escaping ViperServicesContainerShutdownCompletion) {
+        
+        assert(Thread.isMainThread)
+        
+        operations.append({ (operationCompletion) in
+            
+            self.withLock {
+                self.state = .shuttingDown
+            }
+            
+            func shutdownNext() {
+                
+                assert(Thread.isMainThread)
+                
+                if self.bootedServices.isEmpty {
+                    self.withLock {
+                        self.state = .initial
+                    }
+                    completion()
+                    operationCompletion()
+                    return
+                }
+                
+                let service = self.bootedServices.removeFirst()
+                
+                service.shutdown(completion: {
+                    runOnMainThread {
+                        shutdownNext()
+                    }
+                })
+            }
+
+            // Shutdown should be performed in reverse order
+            self.bootedServices.reverse()
+            
+            shutdownNext()
+        })
+        
+        runNextOperation()
     }
     
     // MARK: Helpers
+    
+    private func runNextOperation() {
+        assert(Thread.isMainThread)
+        
+        guard self.operationIsRunning == false else {
+            return
+        }
+        
+        guard self.operations.isEmpty == false else {
+            return
+        }
+        
+        let operation = self.operations.removeFirst()
+        self.operationIsRunning = true
+        
+        operation {
+            assert(Thread.isMainThread)
+            
+            self.operationIsRunning = false
+            self.runNextOperation()
+        }
+    }
     
     private func name(of service: AnyObject) -> String {
         let opaque: UnsafeMutableRawPointer = Unmanaged.passUnretained(service).toOpaque()

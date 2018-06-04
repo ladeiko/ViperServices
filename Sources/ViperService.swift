@@ -30,6 +30,7 @@ public enum ViperServiceBootResult {
 }
 
 public typealias ViperServiceBootCompletion = (_ result: ViperServiceBootResult) -> Void
+public typealias ViperServiceShutdownCompletion = () -> Void
 
 /**
  *  Common protocol for viper service
@@ -44,16 +45,45 @@ public protocol ViperService: class {
      *
      * - parameter container:   parent container, service can save weak reference for further use.
      *
-     * - returns: list of all services current service depends on or nil (empty).
+     * - returns: list of all services current service depends (services should conform to ViperService protocol) on or nil (empty).
      */
-    func setupDependencies(_ container: ViperServicesContainer) -> [ViperService]?
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]?
     
     /**
      *  It is called by container to initialize service. At this moment all services returned
      *  from 'setupDependencies' are ready for use.
      *
      * - parameter launchOptions:   options passed to application while boot.
-     * - parameter completion:   completion block, it will be called after all services boot.
+     * - parameter completion:   completion block, should be called when service is ready
      */
     func boot(launchOptions: [UIApplicationLaunchOptionsKey: Any]?, completion: @escaping ViperServiceBootCompletion)
+    
+    /**
+     * It is called when service must stop its work, just before deallocation.
+     *
+     * - parameter completion:   completion block, should be called when service shutdown is completed
+     */
+    func shutdown(completion: @escaping ViperServiceShutdownCompletion)
+}
+
+/**
+ *  Default implementations
+ */
+public extension ViperService {
+    
+    // Default implementation: no dependencies
+    func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
+        return nil
+    }
+    
+    // Default implementation: does nothing
+    func boot(launchOptions: [UIApplicationLaunchOptionsKey: Any]?, completion: @escaping ViperServiceBootCompletion) {
+        completion(.succeeded)
+    }
+    
+    // Default implementation: does nothing
+    func shutdown(completion: @escaping ViperServiceShutdownCompletion) {
+        completion()
+    }
+    
 }

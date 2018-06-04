@@ -15,7 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     // use DefaultViperServicesContainer or implement your own container
-    let services = DefaultViperServicesContainer()
+    let services: ViperServicesContainer = DefaultViperServicesContainer()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -24,6 +24,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         try! services.register(Service2Impl() as Service2)
         
         services.boot(launchOptions: launchOptions) { (result) in
+            
+            print("boot completed")
+            
             switch result {
             case .succeeded:
                 let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -70,7 +73,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        
+        /**
+         * NOTE: applicationWillTerminate
+         * https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623111-applicationwillterminate
+         *
+         * Your implementation of this method has approximately five seconds to perform any tasks and return.
+         * If the method does not return before time expires, the system may kill the process altogether.
+         */
+        
+        services.shutdown(completion: {
+            print("shutdown completed")
+        })
     }
 
 

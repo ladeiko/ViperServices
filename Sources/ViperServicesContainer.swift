@@ -35,11 +35,13 @@ public enum ViperServicesContainerBootResult {
 }
 
 public typealias ViperServicesContainerBootCompletion = (_ result: ViperServicesContainerBootResult) -> Void
+public typealias ViperServicesContainerShutdownCompletion = () -> Void
 
 enum ViperServicesContainerError: Error {
     case serviceAlreadyRegistered
     case multiFunctionServiceNotAllowed
     case alreadyBooted
+    case bootCanceled
     case youTriedToResolveServiceThatIsNotReadyYet
 }
 
@@ -80,4 +82,9 @@ public protocol ViperServicesContainer: class {
      *                          in case of failure any 'resolve' calls should not be used.
      */
     func boot(launchOptions: [UIApplicationLaunchOptionsKey: Any]?, completion: @escaping ViperServicesContainerBootCompletion)
+    
+    /**
+    * Typically should be called in 'func applicationWillTerminate(_ application: UIApplication)'
+    */
+    func shutdown(completion: @escaping ViperServicesContainerShutdownCompletion)
 }
