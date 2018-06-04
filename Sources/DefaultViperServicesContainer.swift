@@ -58,18 +58,12 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private var bootedServices = [ViperService]()
     private var names: [String: String] = [:]
     private var booting = [String]()
-    private var _lock: os_unfair_lock_t
+    private var _lock: NSRecursiveLock!
 
     // MARK: Life cycle
     
     public init() {
-        self._lock = os_unfair_lock_t.allocate(capacity: 1)
-        self._lock.initialize( to: os_unfair_lock_s() )
-    }
-    
-    deinit {
-        self._lock.deinitialize(count: 1)
-        self._lock.deallocate()
+        self._lock = NSRecursiveLock()
     }
     
     // MARK: ViperServices
@@ -370,11 +364,11 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     }
 
     private func lock() {
-        os_unfair_lock_lock( self._lock )
+        self._lock.lock()
     }
     
     private func unlock() {
-        os_unfair_lock_unlock( self._lock )
+        self._lock.unlock()
     }
     
     @discardableResult

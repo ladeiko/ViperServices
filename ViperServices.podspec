@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "ViperServices"
-  s.version      = "1.1.0"
+  s.version      = "1.1.1"
   s.summary      = "ViperServices is dependency injection container for iOS applications written in Swift."
 
   s.homepage         = "https://github.com/ladeiko/ViperServices"
