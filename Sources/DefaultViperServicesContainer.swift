@@ -72,7 +72,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         
         assert(Thread.isMainThread)
         
-        try! withLock { () -> Void in
+        try withLock { () -> Void in
             
             if state != .initial {
                 throw ViperServicesContainerError.alreadyBooted

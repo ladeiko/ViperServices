@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.2
+### Fixed
+* ```try`` in resolve method of default container
+
 ## 1.1.1
 ### Fixed
 * Crash while recursive lock in ```DefaultViperServicesContainer```
