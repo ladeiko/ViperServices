@@ -39,7 +39,7 @@ If you prefer to install this package manually, just follow these steps:
 git init
 ```
 
-* Add ReduxSwift as a git submodule by running the following command.
+* Add ViperServices as a git submodule by running the following command.
 
 ``` bash
 git submodules add https://github.com/ladeiko/ViperServices.git
