@@ -53,11 +53,11 @@ git submodules add https://github.com/ladeiko/ViperServices.git
 ``` swift
 import ViperServices
 
-protocol Service1: ViperService {
+protocol Service1: class {
     func foo()
 }
 
-class Service1Impl: Service1 {
+class Service1Impl: Service1, ViperService {
     
     func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]? {
         return [ // depends on
@@ -76,7 +76,7 @@ class Service1Impl: Service1 {
     
 }
 
-protocol Service2: ViperService {
+protocol Service2: class {
     func foo()
 }
 
@@ -84,7 +84,7 @@ enum Service2Error: Error {
     case SomeError
 }
 
-class Service2Impl: Service2 {
+class Service2Impl: Service2, ViperService {
     
     private weak var container: ViperServicesContainer!
     
