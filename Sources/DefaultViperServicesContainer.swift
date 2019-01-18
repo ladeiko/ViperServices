@@ -112,6 +112,20 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         }
     }
     
+    open func tryResolve<T>() -> T? {
+        let key = "\(T.self)"
+        return try! withLock { () -> T? in
+            switch state {
+            case .booting:
+                if booting.contains(key) {
+                    throw ViperServicesContainerError.youTriedToResolveServiceThatIsNotReadyYet
+                }
+            default: break
+            }
+            return services[key] as? T
+        }
+    }
+    
     open func boot(launchOptions: [UIApplication.LaunchOptionsKey: Any]?, completion: @escaping ViperServicesContainerBootCompletion) {
         
         assert(Thread.isMainThread)

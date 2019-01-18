@@ -73,6 +73,14 @@ public protocol ViperServicesContainer: class {
     func resolve<T>() -> T
     
     /**
+     *  Locates service implementation for specified service protocol.
+     *
+     *  - returns: service implementation or nil.
+     */
+ 
+    func tryResolve<T>() -> T?
+    
+    /**
      *  Boots service container and all services registred before.
      *  It is recommended to call it in app delegate right after launching.
      *

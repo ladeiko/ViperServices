@@ -21,6 +21,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         try! services.register(Service1Impl() as Service1)
+        
+        let srv2 = services.tryResolve() as Service2?
+        
         try! services.register(Service2Impl() as Service2)
         
         services.boot(launchOptions: launchOptions) { (result) in

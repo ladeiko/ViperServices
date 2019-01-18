@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.4
+## Added
+* Add tryResolve() to services container protocol
+
 ## 1.1.3
 ## Changed
 * Upgrade syntax to swift 4.2
