@@ -112,7 +112,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         }
     }
     
-    open func boot(launchOptions: [UIApplicationLaunchOptionsKey: Any]?, completion: @escaping ViperServicesContainerBootCompletion) {
+    open func boot(launchOptions: [UIApplication.LaunchOptionsKey: Any]?, completion: @escaping ViperServicesContainerBootCompletion) {
         
         assert(Thread.isMainThread)
         

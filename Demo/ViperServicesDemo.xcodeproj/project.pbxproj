@@ -30,6 +30,9 @@
 
 /* Begin PBXFileReference section */
 		023915D8FC7D3F4F63307D15 /* Pods-ViperServicesDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ViperServicesDemoTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests.release.xcconfig"; sourceTree = "<group>"; };
+		12457BEC21F1B2C100260D92 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = CHANGELOG.md; path = ../CHANGELOG.md; sourceTree = "<group>"; };
+		12457BED21F1B2C100260D92 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		12457BEE21F1B2C100260D92 /* ViperServices.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; name = ViperServices.podspec; path = ../ViperServices.podspec; sourceTree = "<group>"; };
 		12FEF537209AF7D700035D2D /* ViperServicesDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ViperServicesDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		12FEF53A209AF7D700035D2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		12FEF53F209AF7D700035D2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -71,6 +74,9 @@
 		12FEF52E209AF7D700035D2D = {
 			isa = PBXGroup;
 			children = (
+				12457BEC21F1B2C100260D92 /* CHANGELOG.md */,
+				12457BED21F1B2C100260D92 /* README.md */,
+				12457BEE21F1B2C100260D92 /* ViperServices.podspec */,
 				12FEF539209AF7D700035D2D /* ViperServicesDemo */,
 				8459F019209DC613007AF5AA /* ViperServicesDemoTests */,
 				12FEF538209AF7D700035D2D /* Products */,
@@ -143,7 +149,6 @@
 				12FEF534209AF7D700035D2D /* Frameworks */,
 				12FEF535209AF7D700035D2D /* Resources */,
 				750644CB01FD09DF81A20D53 /* [CP] Embed Pods Frameworks */,
-				140438B145D0B7D97C02E6EA /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -163,7 +168,6 @@
 				8459F015209DC613007AF5AA /* Frameworks */,
 				8459F016209DC613007AF5AA /* Resources */,
 				259FC3E4EAC8CCD1BB39129B /* [CP] Embed Pods Frameworks */,
-				96BBBFA718BC0C9A30A8088A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -187,9 +191,11 @@
 				TargetAttributes = {
 					12FEF536209AF7D700035D2D = {
 						CreatedOnToolsVersion = 9.3;
+						LastSwiftMigration = 1010;
 					};
 					8459F017209DC613007AF5AA = {
 						CreatedOnToolsVersion = 9.3;
+						LastSwiftMigration = 1010;
 						TestTargetID = 12FEF536209AF7D700035D2D;
 					};
 				};
@@ -234,21 +240,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		140438B145D0B7D97C02E6EA /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		259FC3E4EAC8CCD1BB39129B /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -301,21 +292,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		96BBBFA718BC0C9A30A8088A /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		DC2C90A8193996D9B6C24785 /* [CP] Check Pods Manifest.lock */ = {
@@ -515,7 +491,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ladzeika.ViperServicesDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -534,7 +510,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ladzeika.ViperServicesDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -553,7 +529,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ladeiko.ViperServicesDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ViperServicesDemo.app/ViperServicesDemo";
 			};
@@ -573,7 +549,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ladeiko.ViperServicesDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ViperServicesDemo.app/ViperServicesDemo";
 			};

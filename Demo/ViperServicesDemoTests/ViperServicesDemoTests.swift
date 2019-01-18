@@ -48,7 +48,7 @@ class DefaultServiceImpl: ViperService {
         return nil
     }
     
-    func boot(launchOptions: [UIApplicationLaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
+    func boot(launchOptions: [UIApplication.LaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
         if asyncBoot {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
                 self.bootBlock()

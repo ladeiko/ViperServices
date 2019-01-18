@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.3
+## Changed
+* Upgrade syntax to swift 4.2
+
 ## 1.1.2
 ### Fixed
 * ```try`` in resolve method of default container

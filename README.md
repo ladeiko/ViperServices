@@ -65,7 +65,7 @@ class Service1Impl: Service1, ViperService {
         ]
     }
     
-    func boot(launchOptions: [UIApplicationLaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
+    func boot(launchOptions: [UIApplication.LaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
         print("boot 1 called")
         completion(.succeeded) // sync completion
     }
@@ -93,7 +93,7 @@ class Service2Impl: Service2, ViperService {
         return nil
     }
     
-    func boot(launchOptions: [UIApplicationLaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
+    func boot(launchOptions: [UIApplication.LaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
         print("boot 2 called")
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { // async completion
             switch arc4random() % 2 { // emulate random result
@@ -121,7 +121,7 @@ var window: UIWindow?
 // use DefaultViperServicesContainer or implement your own container
 let services = DefaultViperServicesContainer() 
 
-func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     // Override point for customization after application launch.
     
     try! services.register(Service1Impl() as Service1)

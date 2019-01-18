@@ -17,7 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // use DefaultViperServicesContainer or implement your own container
     let services: ViperServicesContainer = DefaultViperServicesContainer()
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
         try! services.register(Service1Impl() as Service1)
