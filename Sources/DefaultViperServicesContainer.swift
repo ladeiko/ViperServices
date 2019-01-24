@@ -370,6 +370,41 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
             }
         }
         if !isEmpty(graph: graph) {
+            
+            #if DEBUG
+            func getCycleDeps(_ k: String, _ result: [String]) -> [String]? {
+                
+                let cycle = result.reduce(into: [String: Int](), { (r, v) in
+                    r[v] = r[v] ?? 0
+                    r[v] = r[v]! + 1
+                }).reduce(into: false, { (r, v) in
+                    if !r && v.value == 2 {
+                        r = true
+                    }
+                })
+                
+                if cycle {
+                    return result
+                }
+                
+                for d in graph[k]! {
+                    var s = result
+                    s.append(d)
+                    if let r = getCycleDeps(d, s) {
+                        return r
+                    }
+                }
+                
+                return nil
+            }
+            
+            graph.forEach { (p) in
+                if let deps = getCycleDeps(p.key, [p.key]) {
+                    print("Cyclic dependency: \(deps.joined(separator: " -> "))")
+                }
+            }
+            #endif
+            
             throw TopologicalSortError.CycleError("This graph contains a cycle.")
         }
         else {

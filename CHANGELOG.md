@@ -1,7 +1,11 @@
 # CHANGELOG
 
+## 1.1.5
+### Added
+* Add printing of cyclic dependencies in DefaultViperServicesContainer if DEBUG is defined
+
 ## 1.1.4
-## Added
+### Added
 * Add tryResolve() to services container protocol
 
 ## 1.1.3
