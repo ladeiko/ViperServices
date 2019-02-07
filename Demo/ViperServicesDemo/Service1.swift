@@ -35,4 +35,8 @@ class Service1Impl: Service1, ViperService {
         print("foo 1 called")
     }
     
+    func totalBootCompleted(_ result: ViperServicesContainerBootResult) {
+        print("totalBootCompleted 1")
+    }
+    
 }

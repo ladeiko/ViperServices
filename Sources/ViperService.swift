@@ -64,6 +64,12 @@ public protocol ViperService: class {
      * - parameter completion:   completion block, should be called when service shutdown is completed
      */
     func shutdown(completion: @escaping ViperServiceShutdownCompletion)
+    
+    /**
+     * It is called after all services completed boot process.
+     * Since version 1.2.1
+     */
+    func totalBootCompleted(_ result: ViperServicesContainerBootResult)
 }
 
 /**
@@ -85,5 +91,8 @@ public extension ViperService {
     func shutdown(completion: @escaping ViperServiceShutdownCompletion) {
         completion()
     }
+    
+    // Default implementation: does nothing
+    func totalBootCompleted(_ result: ViperServicesContainerBootResult) {}
     
 }

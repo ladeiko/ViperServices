@@ -76,6 +76,10 @@ class DefaultServiceImpl: ViperService {
         completion()
     }
     
+    func totalBootCompleted(_ result: ViperServicesContainerBootResult) {
+        print("totalBootCompleted")
+    }
+    
 }
 
 protocol ViperService1: ViperService {}
@@ -124,8 +128,8 @@ class ViperServicesDemoTests: XCTestCase {
         super.tearDown()
     }
     
-    func testSuccessfulBoot() {
-        let services = ViperServicesExample()
+    func testSuccessfulBootSyncMode() {
+        let services = ViperServicesExample(DefaultViperServicesContainerOptions(asyncBoot: false))
         
         try! services.register(ViperServiceImpl1() as ViperService1)
         try! services.register(ViperServiceImpl2() as ViperService2)
@@ -142,15 +146,45 @@ class ViperServicesDemoTests: XCTestCase {
         XCTAssert(context.succeeded)
     }
     
-    func testFailureBootOfFirstService() {
+    func testSuccessfulBootAsyncMode() {
         let services = ViperServicesExample()
+        
+        try! services.register(ViperServiceImpl1() as ViperService1)
+        try! services.register(ViperServiceImpl2() as ViperService2)
+        
+        let context = BootContext()
+        
+        var bootCompleted = false
+        
+        let expectation = XCTestExpectation(description: "")
+        
+        services.boot(launchOptions: nil) { (result) in
+            bootCompleted = true
+            switch result {
+            case .succeeded: context.succeeded = true
+            case .failed(_): break
+            }
+            
+            expectation.fulfill()
+        }
+        
+        XCTAssertTrue(!bootCompleted)
+        
+        wait(for: [expectation], timeout: 10.0)
+        
+        XCTAssert(context.succeeded)
+    }
+    
+    func testFailureBootOfFirstServiceSyncMode() {
+        let services = ViperServicesExample(DefaultViperServicesContainerOptions(asyncBoot: false))
         
         try! services.register(ViperServiceImpl1(succeed: false) as ViperService1)
         try! services.register(ViperServiceImpl2() as ViperService2)
         
         let context = BootContext()
-        
+        var bootCompleted = false
         services.boot(launchOptions: nil) { (result) in
+            bootCompleted = true
             switch result {
             case .succeeded:
                 context.succeeded = true
@@ -161,11 +195,48 @@ class ViperServicesDemoTests: XCTestCase {
             }
         }
         
-        XCTAssert(!context.succeeded)
+        XCTAssertTrue(bootCompleted)
+        XCTAssertTrue(!context.succeeded)
         XCTAssertNotNil(context.failed)
-        XCTAssert(context.failed!.count == 1)
-        XCTAssert(context.failed!.first!.service is ViperServiceImpl1)
-        XCTAssert(TestError.isSomeError(context.failed!.first!.error))
+        XCTAssertTrue(context.failed!.count == 1)
+        XCTAssertTrue(context.failed!.first!.service is ViperServiceImpl1)
+        XCTAssertTrue(TestError.isSomeError(context.failed!.first!.error))
+    }
+    
+    func testFailureBootOfFirstServiceAsyncMode() {
+        let services = ViperServicesExample()
+        
+        try! services.register(ViperServiceImpl1(succeed: false) as ViperService1)
+        try! services.register(ViperServiceImpl2() as ViperService2)
+        
+        let context = BootContext()
+        var bootCompleted = false
+        
+        let expectation = XCTestExpectation(description: "")
+        
+        services.boot(launchOptions: nil) { (result) in
+            bootCompleted = true
+            switch result {
+            case .succeeded:
+                context.succeeded = true
+                
+            case let .failed(failedServices):
+                context.failed = failedServices
+                break
+            }
+            
+            expectation.fulfill()
+        }
+        
+        XCTAssertTrue(!bootCompleted)
+        
+        wait(for: [expectation], timeout: 10.0)
+        
+        XCTAssertTrue(!context.succeeded)
+        XCTAssertNotNil(context.failed)
+        XCTAssertTrue(context.failed!.count == 1)
+        XCTAssertTrue(context.failed!.first!.service is ViperServiceImpl1)
+        XCTAssertTrue(TestError.isSomeError(context.failed!.first!.error))
     }
 
     func testFailureBootOfSecondService() {
@@ -176,6 +247,8 @@ class ViperServicesDemoTests: XCTestCase {
         
         let context = BootContext()
         
+        let expectation = XCTestExpectation(description: "")
+        
         services.boot(launchOptions: nil) { (result) in
             switch result {
             case .succeeded:
@@ -185,7 +258,11 @@ class ViperServicesDemoTests: XCTestCase {
                 context.failed = failedServices
                 break
             }
+            
+            expectation.fulfill()
         }
+        
+        wait(for: [expectation], timeout: 10.0)
         
         XCTAssert(!context.succeeded)
         XCTAssertNotNil(context.failed)
@@ -206,6 +283,8 @@ class ViperServicesDemoTests: XCTestCase {
         
         let context = BootContext()
         
+        let expectation = XCTestExpectation(description: "")
+        
         services.boot(launchOptions: nil) { (result) in
             switch result {
             case .succeeded:
@@ -215,7 +294,11 @@ class ViperServicesDemoTests: XCTestCase {
                 context.failed = failedServices
                 break
             }
+            
+            expectation.fulfill()
         }
+        
+        wait(for: [expectation], timeout: 10.0)
         
         XCTAssert(context.succeeded == true)
         XCTAssertNil(context.failed)
@@ -325,6 +408,8 @@ class ViperServicesDemoTests: XCTestCase {
         try! services.register(DepServiceImplA(bootBlock: { booted.append("A") }, shutdownBlock: { stopped.append("A") }, asyncBoot: true) as DepServiceA)
         
         let context = BootContext()
+        
+        let expectation = XCTestExpectation(description: "")
         
         services.boot(launchOptions: nil) { (result) in
             switch result {

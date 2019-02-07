@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.2.1
+### Added
+*  ```func totalBootCompleted(_ result: ViperServicesContainerBootResult)```
+*  ```DefaultViperServicesContainerOptions```
+
 ## 1.1.5
 ### Added
 * Add printing of cyclic dependencies in DefaultViperServicesContainer if DEBUG is defined

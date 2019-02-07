@@ -35,6 +35,13 @@ func runOnMainThread(_ block: () -> Void) {
     }
 }
 
+public struct DefaultViperServicesContainerOptions {
+    public let asyncBoot: Bool
+    public init(asyncBoot: Bool = true) {
+        self.asyncBoot = asyncBoot
+    }
+}
+
 /**
  *  Default implementation of ViperServicesContainer.
  */
@@ -59,10 +66,12 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private var names: [String: String] = [:]
     private var booting = [String]()
     private var _lock: NSRecursiveLock!
-
+    private let _options: DefaultViperServicesContainerOptions
+    
     // MARK: Life cycle
     
-    public init() {
+    public init(_ options: DefaultViperServicesContainerOptions = DefaultViperServicesContainerOptions()) {
+        self._options = options
         self._lock = NSRecursiveLock()
     }
     
@@ -173,12 +182,25 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
             }
             
             func complete(_ result: ViperServicesContainerBootResult) {
+                
+                #if DEBUG
+                print("[DefaultViperServicesContainer]: Boot completed")
+                #endif
+                
                 self.withLock {
                     self.booting.removeAll()
                     self.state = .bootCompleted
                 }
                 completion(result)
                 operationCompletion()
+                
+                #if DEBUG
+                print("[DefaultViperServicesContainer]: Calling 'totalBootCompleted'")
+                #endif
+                
+                for service in self.services.values {
+                    service.totalBootCompleted(result)
+                }
             }
             
             func bootNext() {
@@ -206,18 +228,39 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                     return
                 }
                 
-                service.boot(launchOptions: launchOptions, completion: { (result) in
-                    runOnMainThread {
-                        switch result {
-                        case .succeeded:
-                            self.bootedServices.append(service)
-                            bootNext()
-                            
-                        case let .failed(error):
-                            complete(.failed(failedServices: [ViperServiceBootFailureResult(service: service, error: error)]))
+                #if DEBUG
+                print("[DefaultViperServicesContainer]: Booting '\(key)'")
+                #endif
+                
+                let go = {
+                    service.boot(launchOptions: launchOptions, completion: { (result) in
+                        runOnMainThread {
+                            switch result {
+                            case .succeeded:
+                                #if DEBUG
+                                print("[DefaultViperServicesContainer]: Boot succeeded for '\(key)'")
+                                #endif
+                                self.bootedServices.append(service)
+                                bootNext()
+                                
+                            case let .failed(error):
+                                #if DEBUG
+                                print("[DefaultViperServicesContainer]: Boot failed for '\(key)' with '\(error.localizedDescription)'")
+                                #endif
+                                complete(.failed(failedServices: [ViperServiceBootFailureResult(service: service, error: error)]))
+                            }
                         }
+                    })
+                }
+                
+                if self._options.asyncBoot {
+                    DispatchQueue.main.async {
+                        go()
                     }
-                })
+                }
+                else {
+                    go()
+                }
             }
             
             #if DEBUG
