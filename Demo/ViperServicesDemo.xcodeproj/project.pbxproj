@@ -246,7 +246,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/ViperServices/ViperServices.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -255,7 +255,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		3C8EA8EDDC01939F825CBA6E /* [CP] Check Pods Manifest.lock */ = {
@@ -282,7 +282,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/ViperServices/ViperServices.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -291,7 +291,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		DC2C90A8193996D9B6C24785 /* [CP] Check Pods Manifest.lock */ = {
@@ -529,7 +529,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ladeiko.ViperServicesDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ViperServicesDemo.app/ViperServicesDemo";
 			};
@@ -549,7 +549,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ladeiko.ViperServicesDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ViperServicesDemo.app/ViperServicesDemo";
 			};
