@@ -1,5 +1,7 @@
 # ViperServices
 
+https://img.shields.io/cocoapods/v/ViperServices.svg?style=flat&label=CocoaPods&colorA=28a745&&colorB=4E4E4E
+
 ## Introduction
 ViperServices is dependency injection container for iOS applications written in Swift.
 It is more lightweight and simple in use than:
