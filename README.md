@@ -1,6 +1,8 @@
 # ViperServices
 
+[![Build Status](https://travis-ci.org/ladeiko/ViperServices.svg?branch=master)](https://travis-ci.org/ladeiko/ViperServices)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/ViperServices.svg?style=flat&label=CocoaPods&colorA=28a745&&colorB=4E4E4E)](https://cocoapods.org/pods/ViperServices)
+[![Swift support](https://img.shields.io/badge/Swift-04.0%20%7C%204.1%20%7C%204.2%20%7C%205.0-lightgrey.svg?colorA=28a745&colorB=4E4E4E)](#swift-versions-support)
 
 ## Introduction
 ViperServices is dependency injection container for iOS applications written in Swift.
