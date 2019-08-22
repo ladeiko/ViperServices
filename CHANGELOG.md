@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.3.0
+### Added
+* ```totalBootBegan()```
+
 ## 1.2.1
 ### Added
 *  ```func totalBootCompleted(_ result: ViperServicesContainerBootResult)```

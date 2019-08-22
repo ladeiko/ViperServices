@@ -66,6 +66,12 @@ public protocol ViperService: class {
     func shutdown(completion: @escaping ViperServiceShutdownCompletion)
     
     /**
+     * It is called when container began to boot all registered services.
+     * Since version 1.3.0
+     */
+    func totalBootBegan()
+    
+    /**
      * It is called after all services completed boot process.
      * Since version 1.2.1
      */
@@ -91,6 +97,9 @@ public extension ViperService {
     func shutdown(completion: @escaping ViperServiceShutdownCompletion) {
         completion()
     }
+    
+    // Default implementation: does nothing
+    func totalBootBegan() {}
     
     // Default implementation: does nothing
     func totalBootCompleted(_ result: ViperServicesContainerBootResult) {}

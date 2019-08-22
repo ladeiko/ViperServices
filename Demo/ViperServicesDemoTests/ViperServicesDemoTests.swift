@@ -76,6 +76,10 @@ class DefaultServiceImpl: ViperService {
         completion()
     }
     
+    func totalBootBegan() {
+        print("totalBootBegan")
+    }
+    
     func totalBootCompleted(_ result: ViperServicesContainerBootResult) {
         print("totalBootCompleted")
     }

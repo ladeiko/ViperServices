@@ -32,7 +32,7 @@
 		023915D8FC7D3F4F63307D15 /* Pods-ViperServicesDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ViperServicesDemoTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests.release.xcconfig"; sourceTree = "<group>"; };
 		12457BEC21F1B2C100260D92 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = CHANGELOG.md; path = ../CHANGELOG.md; sourceTree = "<group>"; };
 		12457BED21F1B2C100260D92 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		12457BEE21F1B2C100260D92 /* ViperServices.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; name = ViperServices.podspec; path = ../ViperServices.podspec; sourceTree = "<group>"; };
+		12457BEE21F1B2C100260D92 /* ViperServices.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; name = ViperServices.podspec; path = ../ViperServices.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		12FEF537209AF7D700035D2D /* ViperServicesDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ViperServicesDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		12FEF53A209AF7D700035D2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		12FEF53F209AF7D700035D2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -245,13 +245,12 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/ViperServices/ViperServices.framework",
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ViperServices.framework",
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemoTests/Pods-ViperServicesDemoTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -281,13 +280,12 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/ViperServices/ViperServices.framework",
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ViperServices.framework",
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ViperServicesDemo/Pods-ViperServicesDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

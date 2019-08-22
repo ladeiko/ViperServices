@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "ViperServices"
-  s.version      = "1.2.1"
+  s.version      = "1.3.0"
   s.summary      = "ViperServices is dependency injection container for iOS applications written in Swift."
 
   s.homepage         = "https://github.com/ladeiko/ViperServices"
@@ -12,5 +12,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.source_files =  "Sources/*.{swift}"
+  s.swift_versions = ['4.2', '5.0']
 
 end

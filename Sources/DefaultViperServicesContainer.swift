@@ -174,8 +174,8 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                         return .orderedSame
                     }
                     
-                    let i1 = self.registrationOrder.index(of: a)!
-                    let i2 = self.registrationOrder.index(of: b)!
+                    let i1 = self.registrationOrder.firstIndex(of: a)!
+                    let i2 = self.registrationOrder.firstIndex(of: b)!
                     
                     return i1 < i2 ? .orderedAscending : .orderedDescending
                 }) as! [String]
@@ -278,6 +278,10 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                 print("[DefaultViperServicesContainer]: Still booting \(stillBooting)")
             })
             #endif
+            
+            for service in self.services.values {
+                service.totalBootBegan()
+            }
             
             bootNext()
         }
