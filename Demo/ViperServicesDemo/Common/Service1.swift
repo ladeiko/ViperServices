@@ -21,7 +21,7 @@ class Service1Impl: Service1, ViperService {
         ]
     }
     
-    func boot(launchOptions: [UIApplication.LaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
+    func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServiceBootCompletion) {
         print("boot 1 called")
         completion(.succeeded)
     }

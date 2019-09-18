@@ -26,7 +26,7 @@ class Service2Impl: Service2, ViperService {
         return nil
     }
     
-    func boot(launchOptions: [UIApplication.LaunchOptionsKey : Any]?, completion: @escaping ViperServiceBootCompletion) {
+    func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServiceBootCompletion) {
         print("boot 2 called")
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             switch arc4random() % 2 {
