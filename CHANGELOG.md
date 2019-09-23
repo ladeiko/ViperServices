@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.3.1
+### Added
+* Support for MacOS
+
 ## 1.3.0
 ### Added
 * ```totalBootBegan()```
