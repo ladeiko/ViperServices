@@ -1,7 +1,8 @@
 # Uncomment the next line to define a global platform for your project
-platform :ios, '10.0'
 
-target 'ViperServicesDemo' do
+
+target 'ViperServicesDemoIOS' do
+  platform :ios, '10.0'
   # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
   use_frameworks!
 
@@ -13,5 +14,11 @@ target 'ViperServicesDemo' do
     # Pods for testing
     pod "ViperServices", :path => "../ViperServices.podspec"
   end
+  
+end
 
+target 'ViperServicesDemoMacOS' do
+  platform :osx, '10.12'
+  use_frameworks!
+  pod "ViperServices", :path => "../ViperServices.podspec"
 end

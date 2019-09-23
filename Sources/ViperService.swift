@@ -56,7 +56,7 @@ public protocol ViperService: class {
      * - parameter launchOptions:   options passed to application while boot.
      * - parameter completion:   completion block, should be called when service is ready
      */
-    func boot(launchOptions: [UIApplication.LaunchOptionsKey: Any]?, completion: @escaping ViperServiceBootCompletion)
+    func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServiceBootCompletion)
     
     /**
      * It is called when service must stop its work, just before deallocation.
@@ -89,7 +89,7 @@ public extension ViperService {
     }
     
     // Default implementation: does nothing
-    func boot(launchOptions: [UIApplication.LaunchOptionsKey: Any]?, completion: @escaping ViperServiceBootCompletion) {
+    func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServiceBootCompletion) {
         completion(.succeeded)
     }
     

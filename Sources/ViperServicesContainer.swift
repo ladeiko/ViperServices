@@ -89,7 +89,7 @@ public protocol ViperServicesContainer: class {
      *  - parameter completion: completion block called after all services boot completed or some of them failed;
      *                          in case of failure any 'resolve' calls should not be used.
      */
-    func boot(launchOptions: [UIApplication.LaunchOptionsKey: Any]?, completion: @escaping ViperServicesContainerBootCompletion)
+    func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServicesContainerBootCompletion)
     
     /**
     * Typically should be called in 'func applicationWillTerminate(_ application: UIApplication)'
