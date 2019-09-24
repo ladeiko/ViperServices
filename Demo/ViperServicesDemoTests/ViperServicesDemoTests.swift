@@ -138,8 +138,15 @@ class ViperServicesDemoTests: XCTestCase {
         try! services.register(ViperServiceImpl1() as ViperService1)
         try! services.register(ViperServiceImpl2() as ViperService2)
         
+        var safeExecDone = false
+        
+        services.safeExec {
+            safeExecDone = true
+        }
+        
         let context = BootContext()
         
+        XCTAssertFalse(safeExecDone)
         services.boot(launchOptions: nil) { (result) in
             switch result {
             case .succeeded: context.succeeded = true
@@ -147,7 +154,8 @@ class ViperServicesDemoTests: XCTestCase {
             }
         }
         
-        XCTAssert(context.succeeded)
+        XCTAssertTrue(context.succeeded)
+        XCTAssertTrue(safeExecDone)
     }
     
     func testSuccessfulBootAsyncMode() {
@@ -159,6 +167,12 @@ class ViperServicesDemoTests: XCTestCase {
         let context = BootContext()
         
         var bootCompleted = false
+        
+        let safeExecExpectation = XCTestExpectation(description: "safe exec")
+        
+        services.safeExec {
+            safeExecExpectation.fulfill()
+        }
         
         let expectation = XCTestExpectation(description: "")
         
@@ -177,6 +191,8 @@ class ViperServicesDemoTests: XCTestCase {
         wait(for: [expectation], timeout: 10.0)
         
         XCTAssert(context.succeeded)
+        
+        wait(for: [safeExecExpectation], timeout: 1.0)
     }
     
     func testFailureBootOfFirstServiceSyncMode() {

@@ -65,8 +65,10 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private var bootedServices = [ViperService]()
     private var names: [String: String] = [:]
     private var booting = [String]()
+    private var bootCompleted = false
     private var _lock: NSRecursiveLock!
     private let _options: DefaultViperServicesContainerOptions
+    private var callAfterBoot = [(() -> Void)]()
     
     // MARK: Life cycle
     
@@ -212,7 +214,16 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                 }
                 
                 if bootCompleted {
+                    
+                    let calls: [(() -> Void)] = self.withLock {
+                        let calls = self.callAfterBoot
+                        self.callAfterBoot.removeAll()
+                        self.bootCompleted = true
+                        return calls
+                    }
+                    
                     complete(.succeeded)
+                    calls.forEach { $0() }
                     return
                 }
                 
@@ -328,6 +339,23 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         })
         
         runNextOperation()
+    }
+    
+    public func safeExec(_ block: @escaping (() -> Void)) {
+        
+        let bootCompleted: Bool = self.withLock {
+            
+            if self.bootCompleted {
+                return true
+            }
+            
+            self.callAfterBoot.append(block)
+            return false
+        }
+        
+        if bootCompleted {
+            block()
+        }
     }
     
     // MARK: Helpers

@@ -95,4 +95,12 @@ public protocol ViperServicesContainer: class {
     * Typically should be called in 'func applicationWillTerminate(_ application: UIApplication)'
     */
     func shutdown(completion: @escaping ViperServicesContainerShutdownCompletion)
+    
+    /**
+     *  Executes specified block of code when after boot comletion.
+     *  If boot completed at the moment of call, then block is executed right now.
+     *  Code will be executed on the current queue if executed right now or on the main queue.
+     */
+    func safeExec(_ block: @escaping (() -> Void))
+    
 }

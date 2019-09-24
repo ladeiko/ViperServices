@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.4.0
+### Added
+* func safeExec() to protocol and to default implementation
+
 ## 1.3.1
 ### Added
 * Support for MacOS
