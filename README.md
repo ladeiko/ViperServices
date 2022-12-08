@@ -58,7 +58,7 @@ git submodules add https://github.com/ladeiko/ViperServices.git
 ``` swift
 import ViperServices
 
-protocol Service1: class {
+protocol Service1: AnyObject {
     func foo()
 }
 
@@ -81,7 +81,7 @@ class Service1Impl: Service1, ViperService {
     
 }
 
-protocol Service2: class {
+protocol Service2: AnyObject {
     func foo()
 }
 

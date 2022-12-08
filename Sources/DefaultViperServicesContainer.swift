@@ -36,9 +36,11 @@ func runOnMainThread(_ block: () -> Void) {
 }
 
 public struct DefaultViperServicesContainerOptions {
+    public let concurrent: Bool
     public let asyncBoot: Bool
-    public init(asyncBoot: Bool = true) {
+    public init(asyncBoot: Bool = true, concurrent: Bool = false) {
         self.asyncBoot = asyncBoot
+        self.concurrent = concurrent
     }
 }
 
@@ -54,6 +56,11 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         case bootCompleted
         case shuttingDown
     }
+    
+    private struct Waiter {
+        let block: Any
+        let queue: DispatchQueue
+    }
 
     private typealias InternalOperation = (_ completion: @escaping (() -> Void) ) -> Void
     
@@ -61,6 +68,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private var operations = [InternalOperation]()
     private var state: State = .initial
     private var services: [String: ViperService] = [:]
+    private var waiters: [String: [Waiter]] = [:]
     private var registrationOrder = [String]()
     private var bootedServices = [ViperService]()
     private var names: [String: String] = [:]
@@ -69,6 +77,10 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private var _lock: NSRecursiveLock!
     private let _options: DefaultViperServicesContainerOptions
     private var callAfterBoot = [(() -> Void)]()
+
+    #if DEBUG
+    private var currentlyBooting: (String, Date)?
+    #endif
     
     // MARK: Life cycle
     
@@ -153,8 +165,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                 }
                 
             }
-            
-            var completed = [String: ViperServiceBootResult]()
+
             var dependencies: Dictionary<String, [String]> = [:]
             
             for service in self.services.values {
@@ -181,6 +192,10 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                     
                     return i1 < i2 ? .orderedAscending : .orderedDescending
                 }) as! [String]
+
+#if DEBUG
+                print("[DefaultViperServicesContainer]: Boot order: \(self.booting)")
+#endif
             }
             
             func complete(_ result: ViperServicesContainerBootResult) {
@@ -240,6 +255,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                 }
                 
                 #if DEBUG
+                self.currentlyBooting = (key, Date())
                 print("[DefaultViperServicesContainer]: Booting '\(key)'")
                 #endif
                 
@@ -248,10 +264,22 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                         runOnMainThread {
                             switch result {
                             case .succeeded:
+
                                 #if DEBUG
+                                self.currentlyBooting = nil
                                 print("[DefaultViperServicesContainer]: Boot succeeded for '\(key)'")
                                 #endif
+
                                 self.bootedServices.append(service)
+                                
+                                let blocks = self.waiters.removeValue(forKey: key)
+                                blocks?.forEach({
+                                    let block = $0.block
+                                    $0.queue.async {
+                                        (block as! ((_ svc: Any) -> Void))(service)
+                                    }
+                                })
+                                
                                 bootNext()
                                 
                             case let .failed(error):
@@ -275,7 +303,12 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
             }
             
             #if DEBUG
-            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (timer) in
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { [weak self] (timer) in
+
+                guard let self = self else {
+                    timer.invalidate()
+                    return
+                }
                 
                 let stillBooting = self.withLock {
                     return Array<String>(self.booting)
@@ -286,7 +319,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                     return
                 }
                 
-                print("[DefaultViperServicesContainer]: Still booting \(stillBooting)")
+                print("[DefaultViperServicesContainer]: Still booting '\(self.currentlyBooting!.0)' for \(Date().timeIntervalSince(self.currentlyBooting!.1)) sec and then \(stillBooting)")
             })
             #endif
             
@@ -355,6 +388,30 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         
         if bootCompleted {
             block()
+        }
+    }
+    
+    public func waitFor<T: ViperService>(_ block: @escaping ((_ service: T) -> Void)) {
+        waitFor(block, on: .global())
+    }
+    
+    public func waitFor<T: ViperService>(_ block: @escaping ((_ service: T) -> Void), on queue: DispatchQueue) {
+        runOnMainThread {
+            let key = "\(T.self)"
+            
+            var a = self.waiters[key] ?? []
+            a.append(.init(block: block, queue: queue))
+            self.waiters[key] = a
+            
+            if let service = self.bootedServices.compactMap({ $0 as? T }).first {
+                let blocks = self.waiters.removeValue(forKey: key)
+                blocks?.forEach({
+                    let block = $0.block
+                    $0.queue.async {
+                        (block as! ((_ svc: T) -> Void))(service)
+                    }
+                })
+            }
         }
     }
     

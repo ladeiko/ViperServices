@@ -35,7 +35,7 @@ public typealias ViperServiceShutdownCompletion = () -> Void
 /**
  *  Common protocol for viper service
  */
-public protocol ViperService: class {
+public protocol ViperService: AnyObject {
     
     /**
      *  Method is called before service boot.

@@ -9,7 +9,7 @@
 import Foundation
 import ViperServices
 
-protocol Service1: class {
+protocol Service1: AnyObject {
     func foo()
 }
 

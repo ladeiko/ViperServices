@@ -34,6 +34,18 @@ public enum ViperServicesContainerBootResult {
     case failed(failedServices:[ViperServiceBootFailureResult])
 }
 
+public enum ViperServicesContainerBootError: Error, LocalizedError {
+    case common([ViperServiceBootFailureResult])
+    public var errorDescription: String? {
+        switch self {
+            case let .common(result):
+                return result
+                    .map({ "'\($0.service)' failed with: \($0.error)" })
+                    .joined(separator: ".")
+        }
+    }
+}
+
 public typealias ViperServicesContainerBootCompletion = (_ result: ViperServicesContainerBootResult) -> Void
 public typealias ViperServicesContainerShutdownCompletion = () -> Void
 
@@ -48,7 +60,7 @@ enum ViperServicesContainerError: Error {
 /**
  *  Protocol for viper services container.
  */
-public protocol ViperServicesContainer: class {
+public protocol ViperServicesContainer: AnyObject {
     
     /**
      *  Registers service implementation for service in container.
@@ -103,4 +115,75 @@ public protocol ViperServicesContainer: class {
      */
     func safeExec(_ block: @escaping (() -> Void))
     
+    /**
+     * Executes specified block when passed service type is ready (complete booting).
+     * Since 1.5.0
+     */
+    func waitFor<T: ViperService>(_ block: @escaping ((_ service: T) -> Void), on queue: DispatchQueue)
+    func waitFor<T: ViperService>(_ block: @escaping ((_ service: T) -> Void))
+    
+}
+
+
+public extension ViperServicesContainer {
+
+#if swift(>=5.5)
+    @available(iOS 13.0, *)
+    func boot(launchOptions: ViperServicesLaunchOptions? = nil) async throws {
+        try await withCheckedThrowingContinuation({ continuation in
+            boot(launchOptions: launchOptions) {
+                switch $0 {
+                    case .succeeded:
+                        continuation.resume(with: .success(()))
+                    case let .failed(failedServices: failedServices):
+                        continuation.resume(with: .failure(ViperServicesContainerBootError.common(failedServices)))
+                }
+            }
+        })
+    }
+
+    @available(iOS 13.0, *)
+    func shutdown() async {
+        await withCheckedContinuation({ continuation in
+            shutdown(completion: {
+                continuation.resume(with: .success(()))
+            })
+        })
+    }
+
+    @available(iOS 13.0, *)
+    func waitFor<T: ViperService>() async -> T {
+        await withCheckedContinuation({ continuation in
+            waitFor({
+                continuation.resume(with: .success($0))
+            })
+        })
+    }
+
+    @available(iOS 13.0, *)
+    func safeExec(_ block: @escaping (() -> Void)) async {
+        await withCheckedContinuation({ continuation in
+            safeExec {
+                block()
+                continuation.resume(with: .success(()))
+            }
+        })
+    }
+
+    @available(iOS 13.0, *)
+    func safeExec(_ block: @escaping (() throws -> Void)) async throws {
+        try await withCheckedThrowingContinuation({ continuation in
+            safeExec {
+                do {
+                    try block()
+                    continuation.resume(with: .success(()))
+                }
+                catch {
+                    continuation.resume(with: .failure(error))
+                }
+            }
+        })
+    }
+#endif
+
 }
