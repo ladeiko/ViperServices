@@ -62,7 +62,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         let queue: DispatchQueue
     }
 
-    private typealias InternalOperation = (_ completion: @escaping (() -> Void) ) -> Void
+    private typealias InternalOperation = @MainActor (_ completion: @escaping (() -> Void) ) -> Void
     
     private var operationIsRunning = false
     private var operations = [InternalOperation]()
@@ -149,9 +149,11 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         }
     }
     
-    open func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServicesContainerBootCompletion) {
+    @MainActor open func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServicesContainerBootCompletion) {
         
-        assert(Thread.isMainThread)
+        if !Thread.isMainThread {
+            return DispatchQueue.main.async { self.boot(launchOptions: launchOptions, completion: completion) }
+        }
         
         operations.append { (operationCompletion) in
             
@@ -197,7 +199,8 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                 print("[DefaultViperServicesContainer]: Boot order: \(self.booting)")
 #endif
             }
-            
+
+            @MainActor
             func complete(_ result: ViperServicesContainerBootResult) {
                 
                 #if DEBUG
@@ -219,7 +222,8 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                     service.totalBootCompleted(result)
                 }
             }
-            
+
+            @MainActor
             func bootNext() {
                 
                 assert(Thread.isMainThread)
@@ -333,16 +337,19 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         runNextOperation()
     }
     
-    open func shutdown(completion: @escaping ViperServicesContainerShutdownCompletion) {
+    @MainActor open func shutdown(completion: @escaping ViperServicesContainerShutdownCompletion) {
         
-        assert(Thread.isMainThread)
+        if !Thread.isMainThread {
+            return DispatchQueue.main.async { self.shutdown(completion: completion) }
+        }
         
         operations.append({ (operationCompletion) in
             
             self.withLock {
                 self.state = .shuttingDown
             }
-            
+
+            @MainActor
             func shutdownNext() {
                 
                 assert(Thread.isMainThread)
@@ -417,7 +424,7 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     
     // MARK: Helpers
     
-    private func runNextOperation() {
+    @MainActor private func runNextOperation() {
         assert(Thread.isMainThread)
         
         guard self.operationIsRunning == false else {

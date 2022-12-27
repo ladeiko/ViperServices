@@ -47,6 +47,7 @@ public protocol ViperService: AnyObject {
      *
      * - returns: list of all services current service depends (services should conform to ViperService protocol) on or nil (empty).
      */
+    @MainActor
     func setupDependencies(_ container: ViperServicesContainer) -> [AnyObject]?
     
     /**
@@ -56,6 +57,7 @@ public protocol ViperService: AnyObject {
      * - parameter launchOptions:   options passed to application while boot.
      * - parameter completion:   completion block, should be called when service is ready
      */
+    @MainActor
     func boot(launchOptions: ViperServicesLaunchOptions?, completion: @escaping ViperServiceBootCompletion)
     
     /**
@@ -63,18 +65,21 @@ public protocol ViperService: AnyObject {
      *
      * - parameter completion:   completion block, should be called when service shutdown is completed
      */
+    @MainActor
     func shutdown(completion: @escaping ViperServiceShutdownCompletion)
     
     /**
      * It is called when container began to boot all registered services.
      * Since version 1.3.0
      */
+    @MainActor
     func totalBootBegan()
     
     /**
      * It is called after all services completed boot process.
      * Since version 1.2.1
      */
+    @MainActor
     func totalBootCompleted(_ result: ViperServicesContainerBootResult)
 }
 
