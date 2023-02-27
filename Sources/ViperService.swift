@@ -29,6 +29,10 @@ public enum ViperServiceBootResult {
     case failed(error: Error)
 }
 
+public enum ViperServiceError: Error {
+    case serviceIsNotActive
+}
+
 public typealias ViperServiceBootCompletion = (_ result: ViperServiceBootResult) -> Void
 public typealias ViperServiceShutdownCompletion = () -> Void
 
@@ -83,6 +87,13 @@ public protocol ViperService: AnyObject {
     func totalBootCompleted(_ result: ViperServicesContainerBootResult)
 }
 
+
+fileprivate struct Keys {
+    static var opCounter = 0
+    static var isOperationsAllowed = 0
+    static var opCompletedBlock = 0
+}
+
 /**
  *  Default implementations
  */
@@ -108,5 +119,61 @@ public extension ViperService {
     
     // Default implementation: does nothing
     func totalBootCompleted(_ result: ViperServicesContainerBootResult) {}
-    
+
+    @MainActor
+    internal var opCounter: Int {
+        set {
+            objc_setAssociatedObject(self, &Keys.opCounter, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+        get {
+            objc_getAssociatedObject(self, &Keys.opCounter) as? Int ?? 0
+        }
+    }
+
+    @MainActor
+    internal var opCompletedBlock: CheckedContinuation<Void, Never>? {
+        set {
+            objc_setAssociatedObject(self, &Keys.opCompletedBlock, newValue, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+        }
+        get {
+            objc_getAssociatedObject(self, &Keys.opCompletedBlock) as? CheckedContinuation<Void, Never>
+        }
+    }
+
+    @MainActor
+    internal(set) var isOperationsAllowed: Bool {
+        set {
+            objc_setAssociatedObject(self, &Keys.isOperationsAllowed, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+        get {
+            objc_getAssociatedObject(self, &Keys.isOperationsAllowed) as? Bool ?? false
+        }
+    }
+
+    @MainActor
+    internal func internal_prepareForShutdown() async {
+        isOperationsAllowed = false
+        if opCounter != 0 {
+            await withCheckedContinuation({ continuation in
+                opCompletedBlock = continuation
+            })
+        }
+    }
+
+    @MainActor
+    func internal_operationStarted() throws {
+        if !isOperationsAllowed {
+            throw ViperServiceError.serviceIsNotActive
+        }
+        opCounter += 1
+    }
+
+    @MainActor
+    func internal_operationStopped() {
+        opCounter -= 1
+        if opCounter == 0, let opCompletedBlock {
+            self.opCompletedBlock = nil
+            opCompletedBlock.resume(returning: ())
+        }
+    }
 }

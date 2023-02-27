@@ -23,6 +23,7 @@
  ******************************************************************************/
 
 import Foundation
+import UIKit
 
 func runOnMainThread(_ block: () -> Void) {
     if Thread.isMainThread {
@@ -77,6 +78,8 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private var _lock: NSRecursiveLock!
     private let _options: DefaultViperServicesContainerOptions
     private var callAfterBoot = [(() -> Void)]()
+    @MainActor private var bootBgTask: UIBackgroundTaskIdentifier = .invalid
+    @MainActor private var shutdownBgTask: UIBackgroundTaskIdentifier = .invalid
 
     #if DEBUG
     private var currentlyBooting: (String, Date)?
@@ -154,8 +157,21 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         if !Thread.isMainThread {
             return DispatchQueue.main.async { self.boot(launchOptions: launchOptions, completion: completion) }
         }
+
+        bootBgTask = UIApplication.shared.beginBackgroundTask {
+            UIApplication.shared.endBackgroundTask(self.bootBgTask)
+            self.bootBgTask = .invalid
+        }
         
-        operations.append { (operationCompletion) in
+        operations.append { (_operationCompletion) in
+
+            let operationCompletion: @MainActor () -> Void = {
+                if self.bootBgTask != .invalid {
+                    UIApplication.shared.endBackgroundTask(self.bootBgTask)
+                    self.bootBgTask = .invalid
+                }
+                _operationCompletion()
+            }
             
             self.withLock {
                 switch self.state {
@@ -253,11 +269,6 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                 let key = "\(next.self)"
                 let service = self.services[key]!
                 
-                if self.operations.isEmpty == false { // if some operation is pending, then break boot
-                    complete(.failed(failedServices: [ViperServiceBootFailureResult(service: service, error: ViperServicesContainerError.bootCanceled)]))
-                    return
-                }
-                
                 #if DEBUG
                 self.currentlyBooting = (key, Date())
                 print("[DefaultViperServicesContainer]: Booting '\(key)'")
@@ -268,6 +279,8 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                         runOnMainThread {
                             switch result {
                             case .succeeded:
+
+                                service.isOperationsAllowed = true
 
                                 #if DEBUG
                                 self.currentlyBooting = nil
@@ -342,8 +355,21 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
         if !Thread.isMainThread {
             return DispatchQueue.main.async { self.shutdown(completion: completion) }
         }
-        
-        operations.append({ (operationCompletion) in
+
+        shutdownBgTask = UIApplication.shared.beginBackgroundTask {
+            UIApplication.shared.endBackgroundTask(self.shutdownBgTask)
+            self.shutdownBgTask = .invalid
+        }
+
+        operations.append({ (_operationCompletion) in
+
+            let operationCompletion: @MainActor () -> Void = {
+                if self.shutdownBgTask != .invalid {
+                    UIApplication.shared.endBackgroundTask(self.shutdownBgTask)
+                    self.shutdownBgTask = .invalid
+                }
+                _operationCompletion()
+            }
             
             self.withLock {
                 self.state = .shuttingDown
@@ -362,14 +388,17 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                     operationCompletion()
                     return
                 }
-                
+
                 let service = self.bootedServices.removeFirst()
-                
-                service.shutdown(completion: {
-                    runOnMainThread {
-                        shutdownNext()
-                    }
-                })
+
+                Task {
+                    await service.internal_prepareForShutdown()
+                    service.shutdown(completion: {
+                        runOnMainThread {
+                            shutdownNext()
+                        }
+                    })
+                }
             }
 
             // Shutdown should be performed in reverse order
