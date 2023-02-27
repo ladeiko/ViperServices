@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.license          = 'MIT'
   s.authors           = { "Siarhei Ladzeika" => "sergey.ladeiko@gmail.com" }
   s.source           = { :git => "https://github.com/ladeiko/ViperServices.git", :tag => s.version.to_s }
-  s.ios.deployment_target = '10.0'
+  s.ios.deployment_target = '13.0'
   s.osx.deployment_target = '10.15'
   s.requires_arc = true
 
