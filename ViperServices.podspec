@@ -9,7 +9,6 @@ Pod::Spec.new do |s|
   s.authors           = { "Siarhei Ladzeika" => "sergey.ladeiko@gmail.com" }
   s.source           = { :git => "https://github.com/ladeiko/ViperServices.git", :tag => s.version.to_s }
   s.ios.deployment_target = '13.0'
-  s.osx.deployment_target = '10.15'
   s.requires_arc = true
   s.framework             = 'UIKit'
   s.source_files =  "Sources/*.{swift}"
