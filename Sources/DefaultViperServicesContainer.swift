@@ -140,11 +140,11 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     
     open func tryResolve<T>() -> T? {
         let key = "\(T.self)"
-        return try! withLock { () -> T? in
+        return withLock { () -> T? in
             switch state {
             case .booting:
                 if booting.contains(key) {
-                    throw ViperServicesContainerError.youTriedToResolveServiceThatIsNotReadyYet
+                    return nil
                 }
             default: break
             }
@@ -356,6 +356,10 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
             return DispatchQueue.main.async { self.shutdown(completion: completion) }
         }
 
+#if DEBUG
+        print("[DefaultViperServicesContainer]: Shutdown started")
+#endif
+
         shutdownBgTask = UIApplication.shared.beginBackgroundTask {
             UIApplication.shared.endBackgroundTask(self.shutdownBgTask)
             self.shutdownBgTask = .invalid
@@ -384,12 +388,19 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                     self.withLock {
                         self.state = .initial
                     }
+#if DEBUG
+                    print("[DefaultViperServicesContainer]: Shutdown completed")
+#endif
                     completion()
                     operationCompletion()
                     return
                 }
 
                 let service = self.bootedServices.removeFirst()
+
+#if DEBUG
+                print("[DefaultViperServicesContainer]: Shutting down \(service.self)")
+#endif
 
                 Task {
                     await service.internal_prepareForShutdown()
@@ -592,6 +603,14 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
     private func withLock<T>(_ block: () throws -> T) rethrows -> T {
         lock()
         let r: T = try block()
+        unlock()
+        return r
+    }
+
+    @discardableResult
+    private func withLock<T>(_ block: () -> T) -> T {
+        lock()
+        let r: T = block()
         unlock()
         return r
     }
