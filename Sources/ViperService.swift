@@ -146,7 +146,7 @@ public extension ViperService {
             objc_setAssociatedObject(self, &Keys.isOperationsAllowed, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
         get {
-            objc_getAssociatedObject(self, &Keys.isOperationsAllowed) as? Bool ?? false
+            objc_getAssociatedObject(self, &Keys.isOperationsAllowed) as? Bool ?? true
         }
     }
 
@@ -161,8 +161,8 @@ public extension ViperService {
     }
 
     @MainActor
-    func internal_operationStarted() throws {
-        if !isOperationsAllowed {
+    func internal_operationStarted(forceStart: Bool = false) throws {
+        if opCounter == 0 && !isOperationsAllowed && !forceStart {
             throw ViperServiceError.serviceIsNotActive
         }
         opCounter += 1

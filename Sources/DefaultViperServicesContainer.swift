@@ -280,8 +280,6 @@ open class DefaultViperServicesContainer: ViperServicesContainer {
                             switch result {
                             case .succeeded:
 
-                                service.isOperationsAllowed = true
-
                                 #if DEBUG
                                 self.currentlyBooting = nil
                                 print("[DefaultViperServicesContainer]: Boot succeeded for '\(key)'")
